@@ -1,0 +1,66 @@
+SELECT *
+FROM `capstone-project-326007.coviddata.covid_deaths`
+ORDER BY 3,4
+
+SELECT *
+FROM `capstone-project-326007.coviddata.covidvaccinations`
+ORDER BY 3,4
+
+-- Filtering data which we are about to use
+SELECT location,date, total_cases,new_cases,population,total_deaths
+FROM `capstone-project-326007.coviddata.covid_deaths`
+ORDER BY 1,2
+
+--Total cases Vs Total Deaths
+SELECT location,date, total_cases,population,total_deaths,(total_deaths/total_cases)*100 as death_percentage
+FROM `capstone-project-326007.coviddata.covid_deaths`
+ORDER BY 1,2
+
+--total cases vs Population
+--Percentage of Population is affected
+
+SELECT location,date, total_cases,population,(total_cases/population)*100 as covid_infected
+FROM `capstone-project-326007.coviddata.covid_deaths`
+WHERE location = "India"
+ORDER BY 1,2
+
+--countries with highest infection rate
+
+SELECT location,population,MAX(total_cases) AS highinfectioncount, MAX((total_cases/population))*100 as PercentagePopulationInfected
+FROM `capstone-project-326007.coviddata.covid_deaths`
+WHERE continent is not null
+GROUP BY location,population
+ORDER BY 1,2
+
+--countries with highest death rates
+
+SELECT location,MAX(total_deaths) as Total_death_count
+FROM 'capstone-project-326007.coviddata.covidvaccinations`
+
+GROUP BY location
+ORDER BY Total_death_count desc
+
+-- contients with highest deaths
+
+SELECT continent,MAX(CAST(total_deaths)as int) as Total_death_count
+FROM 'capstone-project-326007.coviddata.covid_deaths'
+WHERE continent is not null
+GROUP BY location
+ORDER BY death_count desc
+
+-- Global Numbers
+SELECT date,SUM(new_cases) as totalcases,SUM(cast(new_deaths as int)) as totaldeaths, SUM(cast(new_deaths as int))/SUM(new_cases)*100 as death_percentage
+FROM 'capstone-project-326007.coviddata.covid_deaths'
+WHERE continent is not null
+GROUP BY date
+ORDER BY death_percentage desc
+
+-- Total Population vs Vaccination
+SELECT dea.continent,dea.location,dea.date,dea.population,vac.new_vaccinations,
+SUM(CAST(new_vaccinations as int)) OVER (PARTITION BY dea.location)  --aggregating numbers by adding up and partitioning 
+FROM `capstone-project-326007.coviddata.covid_deaths` as dea
+JOIN `capstone-project-326007.coviddata.covidvaccinations` as vac
+ON dea.location = vac.location
+AND dea.date = vac.date
+WHERE dea.continent is not null 
+ORDER BY 1,2
